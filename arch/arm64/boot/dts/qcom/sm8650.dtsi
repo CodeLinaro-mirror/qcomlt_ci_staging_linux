@@ -2595,18 +2595,11 @@
 				      "tx_lane0_sync_clk",
 				      "rx_lane0_sync_clk",
 				      "rx_lane1_sync_clk";
-			freq-table-hz = <100000000 403000000>,
-					<0 0>,
-					<0 0>,
-					<100000000 403000000>,
-					<100000000 403000000>,
-					<0 0>,
-					<0 0>,
-					<0 0>;
 
 			resets = <&gcc GCC_UFS_PHY_BCR>;
 			reset-names = "rst";
 
+			operating-points-v2 = <&ufs_opp_table>;
 			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
 					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
 					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
@@ -2628,6 +2621,48 @@
 			#reset-cells = <1>;
 
 			status = "disabled";
+
+			ufs_opp_table: opp-table {
+					   compatible = "operating-points-v2";
+					   // LOW_SVS
+					   opp-100000000 {
+							   opp-hz = /bits/ 64 <100000000>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <100000000>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <0>;
+							   required-opps = <&rpmhpd_opp_low_svs>;
+					   };
+
+					   // SVS
+					   opp-201500000 {
+							   opp-hz = /bits/ 64 <201500000>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <201500000>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <0>;
+							   required-opps = <&rpmhpd_opp_svs>;
+					   };
+
+					   // NOM/TURBO
+					   opp-403000000 {
+							   opp-hz = /bits/ 64 <403000000>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <403000000>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <0>,
+									   /bits/ 64 <0>;
+							   required-opps = <&rpmhpd_opp_nom>;
+					   };
+			   };
 		};
 
 		ice: crypto@1d88000 {
