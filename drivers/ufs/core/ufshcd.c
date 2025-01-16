@@ -1400,13 +1400,17 @@ out:
 	return ret;
 }
 
-static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err, bool scale_up)
+static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err)
 {
 	up_write(&hba->clk_scaling_lock);
 
-	/* Enable Write Booster if we have scaled up else disable it */
-	if (ufshcd_enable_wb_if_scaling_up(hba) && !err)
-		ufshcd_wb_toggle(hba, scale_up);
+	/* Enable Write Booster if current gear requires it else disable it */
+	if (ufshcd_enable_wb_if_scaling_up(hba) && !err) {
+		bool wb_en;
+
+		wb_en = hba->pwr_info.gear_rx >= hba->clk_scaling.wb_gear ? true : false;
+		ufshcd_wb_toggle(hba, wb_en);
+	}
 
 	mutex_unlock(&hba->wb_mutex);
 
@@ -1461,7 +1465,7 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, unsigned long freq,
 	}
 
 out_unprepare:
-	ufshcd_clock_scaling_unprepare(hba, ret, scale_up);
+	ufshcd_clock_scaling_unprepare(hba, ret);
 	return ret;
 }
 
@@ -1812,6 +1816,9 @@ static void ufshcd_init_clk_scaling(struct ufs_hba *hba)
 
 	if (!hba->clk_scaling.min_gear)
 		hba->clk_scaling.min_gear = UFS_HS_G1;
+
+	if (!hba->clk_scaling.wb_gear)
+		hba->clk_scaling.wb_gear = UFS_HS_G3;
 
 	INIT_WORK(&hba->clk_scaling.suspend_work,
 		  ufshcd_clk_scaling_suspend_work);
