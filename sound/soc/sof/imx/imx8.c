@@ -8,7 +8,7 @@
 
 #include <linux/firmware.h>
 #include <linux/of_platform.h>
-#include <linux/of_address.h>
+#include <linux/of_reserved_mem.h>
 #include <linux/of_irq.h>
 #include <linux/pm_domain.h>
 
@@ -177,7 +177,6 @@ static int imx8_probe(struct snd_sof_dev *sdev)
 {
 	struct platform_device *pdev = to_platform_device(sdev->dev);
 	struct device_node *np = pdev->dev.of_node;
-	struct device_node *res_node;
 	struct resource *mmio;
 	struct imx8_priv *priv;
 	struct resource res;
@@ -275,15 +274,7 @@ static int imx8_probe(struct snd_sof_dev *sdev)
 	}
 	sdev->mmio_bar = SOF_FW_BLK_TYPE_IRAM;
 
-	res_node = of_parse_phandle(np, "memory-region", 0);
-	if (!res_node) {
-		dev_err(&pdev->dev, "failed to get memory region node\n");
-		ret = -ENODEV;
-		goto exit_pdev_unregister;
-	}
-
-	ret = of_address_to_resource(res_node, 0, &res);
-	of_node_put(res_node);
+	ret = of_reserved_mem_region_to_resource(np, 0, &res);
 	if (ret) {
 		dev_err(&pdev->dev, "failed to get reserved region address\n");
 		goto exit_pdev_unregister;
